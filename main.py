@@ -4,13 +4,13 @@ import time
 import requests
 import datetime
 
-url = "https://api.airplanes.live/v2/point/38.75264976994842/-121.35877086617117/15"
+url = "https://api.airplanes.live/v2/point/38.90875638071712/-121.5406827689271/50"
 
 cleanedData = []
+frames = []
 
 def update_data():
     try:
-
         response = requests.get(url)
 
         if response.status_code == 200:
@@ -51,8 +51,15 @@ def update_time():
 def refresh():
     cleanedData.clear()
     update_data()
-    make_new_cards()
-    root.after(15000, refresh)
+    count = 0
+    for j in cleanedData:
+        frames[count]["flight"].config(text=j["flight"])
+        frames[count]["lat"].config(text=j["lat"])
+        frames[count]["lon"].config(text=j["lon"])
+        frames[count]["dst"].config(text=j["dst"])
+        count = count + 1
+
+    root.after(5000, refresh)
 
 root = tk.Tk()
 w, h = root.winfo_screenwidth(), root.winfo_screenheight()
@@ -68,21 +75,26 @@ header.configure(background='black')
 mainFrame = tk.Frame(root)
 mainFrame.configure(background='black')
 
-#create the flight cards, i = 3 so 3 cards will be created
-def make_new_cards():
-    for i in cleanedData:
-        card = tk.Frame(mainFrame)
-        flightLabel = tk.Label(card, text=i["flight"], font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
-        flightLabel.pack()
-        latLabel = tk.Label(card, text=i["lat"], font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
-        latLabel.pack()
-        longLabel = tk.Label(card, text=i["lon"], font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
-        longLabel.pack()
-        distLabel = tk.Label(card, text=i["dst"], font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
-        distLabel.pack()
-        card.configure(background='black')
-        card.pack(pady=50)
-
+#create the flight cards, 3 cards will be created
+for i in range(0, 3):
+    tempData = {}
+    card = tk.Frame(mainFrame)
+    flightLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
+    flightLabel.pack()
+    latLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
+    latLabel.pack()
+    longLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
+    longLabel.pack()
+    distLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
+    distLabel.pack()
+    card.configure(background='black')
+    card.pack(pady=50)
+    tempData["flight"] = flightLabel
+    tempData["lat"] = latLabel
+    tempData["lon"] = longLabel
+    tempData["dst"] = distLabel
+    frames.append(tempData)
+    
 #label for the time
 time_label = tk.Label(header, text="", font=('Arial', 24), bg = '#000000', fg='#ffffff', highlightbackground='#000000' )
 time_label.pack(padx=(0, 50), pady=50, side="right")
