@@ -1,18 +1,22 @@
 import tkinter as tk
-import os, sys
 import time
 import requests
-import datetime
+import os 
+from dotenv import load_dotenv
 
 #https://api.airplanes.live/v2/point/lat/lon/radius
-url = "https://api.airplanes.live/v2/point/38.90875638071712/-121.5406827689271/50"
+airplanesUrl = "https://api.airplanes.live/v2/point/38.727929544614305/-121.145174979809/50"
+geoUrl = "https://api.geoapify.com/v1/geocode/reverse"
 
 cleanedData = []
 frames = []
 
+load_dotenv()
+geoKey = os.getenv("GEOAPIFY_API_KEY")
+
 def update_data():
     try:
-        response = requests.get(url)
+        response = requests.get(airplanesUrl)
 
         if response.status_code == 200:
 
@@ -35,6 +39,7 @@ def update_data():
                 tempData["dst"] = (x.get("dst"))
                 cleanedData.append(tempData)
                 counter = counter + 1
+                coordToCity(x.get("lat"), x.get("lon"))
                 if counter == 3:
                     break
 
@@ -66,6 +71,27 @@ def refresh():
 
     root.after(5000, refresh)
 
+def coordToCity(lat, lon):
+    paramsDic = {}
+    paramsDic["lat"] = lat
+    paramsDic["lon"] = lon
+    paramsDic["apiKey"] = geoKey
+
+    try: 
+        response = requests.get(geoUrl, params=paramsDic)
+
+        if response.status_code == 200:
+            data = response.json()
+            print(data)
+
+        else:
+            print(response.status_code)
+
+    except requests.exceptions.RequestException as e:
+        print(f"A network error occurred: {e}")
+
+
+
 root = tk.Tk()
 w, h = root.winfo_screenwidth(), root.winfo_screenheight()
 
@@ -84,20 +110,22 @@ mainFrame.configure(background='black')
 for i in range(0, 3):
     tempData = {}
     card = tk.Frame(mainFrame)
-    flightLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
+    flightLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
     flightLabel.pack()
-    latLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
+    latLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
     latLabel.pack()
-    longLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
+    longLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
     longLabel.pack()
-    distLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff', background='#000000' )
+    distLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
     distLabel.pack()
+    locationLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
     card.configure(background='black')
     card.pack(pady=50)
     tempData["flight"] = flightLabel
     tempData["lat"] = latLabel
     tempData["lon"] = longLabel
     tempData["dst"] = distLabel
+    tempData["location"] = locationLabel
     frames.append(tempData)
     
 #label for the time
