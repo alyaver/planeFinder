@@ -4,7 +4,7 @@
 - [x] Request aircraft data
 - [x] Sort aircraft by distance
 - [x] Create three reusable cards
-- [ ] add flitering for only planes that are in flight
+- [x] add flitering for only planes that are in flight
 - [ ] find another api to dispalay origin and destination based on flight numbers
 - [ ] display origin and destination
 - [ ] get plane type from flight numbers

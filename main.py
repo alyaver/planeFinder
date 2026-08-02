@@ -4,6 +4,7 @@ import time
 import requests
 import datetime
 
+#https://api.airplanes.live/v2/point/lat/lon/radius
 url = "https://api.airplanes.live/v2/point/38.90875638071712/-121.5406827689271/50"
 
 cleanedData = []
@@ -24,6 +25,10 @@ def update_data():
                 check = x.get("flight")
                 if not check:
                     continue
+                #make sure that only planes in air are showing up
+                if x.get("alt_baro") == "ground" or int(x.get("alt_baro")) < 200:
+                    continue
+                #get the 'tail number' and strip any spaces
                 tempData["flight"] = (x.get("flight")).strip()
                 tempData["lat"] = (x.get("lat"))
                 tempData["lon"] = (x.get("lon"))
