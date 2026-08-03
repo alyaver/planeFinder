@@ -9,7 +9,7 @@ airplanesUrl = "https://api.airplanes.live/v2/point/38.727929544614305/-121.1451
 geoUrl = "https://api.geoapify.com/v1/geocode/reverse"
 
 cleanedPlaneData = []
-planehistory = {}
+planeHistory = {}
 frames = []
 
 load_dotenv()
@@ -36,11 +36,22 @@ def update_data():
                     continue
                 #get the 'tail number' and strip any spaces
                 tempData["flight"] = (x.get("flight")).strip()
-                planehistory["flight"] = (x.get("flight")).strip()
                 tempData["lat"] = (x.get("lat"))
                 tempData["lon"] = (x.get("lon"))
                 tempData["dst"] = (x.get("dst"))
-                tempData["desc"] = (x.get("desc") or x.get("t") or "Uknown Aircraft")
+                tempData["desc"] = (x.get("desc") or x.get("t") or "Unknown Aircraft")
+
+                planeHex = x.get("hex")
+                planeLocation = {}
+                if planeHistory.get(planeHex):
+                    planeLocation = planeHistory[planeHex]
+
+                else:
+                    planeLocation = coordToCity(x.get("lat"), x.get("lon"))
+                    planeHistory[planeHex] = planeLocation
+
+                tempData["location"] = planeLocation
+
                 cleanedPlaneData.append(tempData)
                 counter = counter + 1
 
@@ -73,6 +84,29 @@ def refresh():
         frames[count]["dst"].config(text=j["dst"])
         frames[count]["desc"].config(text=j["desc"])
 
+        location = j["location"]
+
+        city = location.get("city")
+        county = location.get("county")
+        state = location.get("state")
+        state_code = location.get("state_code")
+        country = location.get("country")
+        country_code = location.get("country_code")
+
+        displayLocation = "Unknown Location"
+
+        if city:
+            if state_code:
+                displayLocation = city, state_code
+            elif state:
+                displayLocation = city, state
+        elif state:
+            if country_code:
+                displayLocation = state, country
+            elif country_code:
+                displayLocation = state, country_code
+        elif county:
+            
         count = count + 1
 
     root.after(5000, refresh)
@@ -83,29 +117,46 @@ def coordToCity(lat, lon):
     paramsDic["lon"] = lon
     paramsDic["apiKey"] = geoKey
 
+    fallbackLocation = {
+    "country_code": None,
+    "country": None,
+    "state_code": None,
+    "state": None,
+    "county": None,
+    "city": None,
+    "postcode": None
+}
+
     try: 
         response = requests.get(geoUrl, params=paramsDic)
 
         if response.status_code == 200:
-            data = response.json()
 
+            data = response.json()
             features = data.get("features") or []
 
             if features:
                 properties = features[0].get("properties") or {}
 
+            else:
+                return fallbackLocation
+
             tempLocData = {}
-            tempLocData["country"] = data["features"][0]["properties"].get("country_code")
-            tempLocData["state"] = data["features"][0]["properties"].get("state")
-            tempLocData["county"] = data["features"][0]["properties"].get("county")
-            tempLocData["city"] = data["features"][0]["properties"].get("city")
-            tempLocData["postcode"] = data["features"][0]["properties"].get("postcode")
+            tempLocData["country_code"] = properties.get("country_code")
+            tempLocData["country"] = properties.get("country")
+            tempLocData["state_code"] = properties.get("state_code")
+            tempLocData["state"] = properties.get("state")
+            tempLocData["county"] = properties.get("county")
+            tempLocData["city"] = properties.get("city")
+            tempLocData["postcode"] = properties.get("postcode")
             return tempLocData
         else:
             print(response.status_code)
+            return fallbackLocation
 
     except requests.exceptions.RequestException as e:
         print(f"A network error occurred: {e}")
+        return fallbackLocation
 
 
 
