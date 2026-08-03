@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 airplanesUrl = "https://api.airplanes.live/v2/point/38.727929544614305/-121.145174979809/50"
 geoUrl = "https://api.geoapify.com/v1/geocode/reverse"
 
-cleanedData = []
+cleanedPlaneData = []
+planehistory = {}
 frames = []
 
 load_dotenv()
@@ -21,6 +22,7 @@ def update_data():
         if response.status_code == 200:
 
             data = response.json()
+            print(data)
             sortedData = (sorted(data["ac"], key=lambda x: x["dst"]))
 
             counter = 0
@@ -34,17 +36,19 @@ def update_data():
                     continue
                 #get the 'tail number' and strip any spaces
                 tempData["flight"] = (x.get("flight")).strip()
+                planehistory["flight"] = (x.get("flight")).strip()
                 tempData["lat"] = (x.get("lat"))
                 tempData["lon"] = (x.get("lon"))
                 tempData["dst"] = (x.get("dst"))
-                cleanedData.append(tempData)
+                tempData["desc"] = (x.get("desc") or x.get("t") or "Uknown Aircraft")
+                cleanedPlaneData.append(tempData)
                 counter = counter + 1
-                coordToCity(x.get("lat"), x.get("lon"))
+
                 if counter == 3:
                     break
 
             print("Success")
-            print(cleanedData)
+            print(cleanedPlaneData)
         else:
             print(f"Fail: {response.status_code}")
 
@@ -59,14 +63,16 @@ def update_time():
         root.after(1000, update_time)  
 
 def refresh():
-    cleanedData.clear()
+    cleanedPlaneData.clear()
     update_data()
     count = 0
-    for j in cleanedData:
+    for j in cleanedPlaneData:
         frames[count]["flight"].config(text=j["flight"])
         frames[count]["lat"].config(text=j["lat"])
         frames[count]["lon"].config(text=j["lon"])
         frames[count]["dst"].config(text=j["dst"])
+        frames[count]["desc"].config(text=j["desc"])
+
         count = count + 1
 
     root.after(5000, refresh)
@@ -82,8 +88,19 @@ def coordToCity(lat, lon):
 
         if response.status_code == 200:
             data = response.json()
-            print(data)
 
+            features = data.get("features") or []
+
+            if features:
+                properties = features[0].get("properties") or {}
+
+            tempLocData = {}
+            tempLocData["country"] = data["features"][0]["properties"].get("country_code")
+            tempLocData["state"] = data["features"][0]["properties"].get("state")
+            tempLocData["county"] = data["features"][0]["properties"].get("county")
+            tempLocData["city"] = data["features"][0]["properties"].get("city")
+            tempLocData["postcode"] = data["features"][0]["properties"].get("postcode")
+            return tempLocData
         else:
             print(response.status_code)
 
@@ -119,6 +136,9 @@ for i in range(0, 3):
     distLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
     distLabel.pack()
     locationLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
+    locationLabel.pack()
+    typeLabel = tk.Label(card, text = "", font=('Arial', 18), bg = '#000000', fg='#ffffff')
+    typeLabel.pack()
     card.configure(background='black')
     card.pack(pady=50)
     tempData["flight"] = flightLabel
@@ -126,6 +146,7 @@ for i in range(0, 3):
     tempData["lon"] = longLabel
     tempData["dst"] = distLabel
     tempData["location"] = locationLabel
+    tempData["desc"] = typeLabel
     frames.append(tempData)
     
 #label for the time
