@@ -97,17 +97,26 @@ def refresh():
 
         if city:
             if state_code:
-                displayLocation = city, state_code
+                displayLocation = f'{city}, {state_code}'
             elif state:
-                displayLocation = city, state
-        elif state:
-            if country_code:
-                displayLocation = state, country
-            elif country_code:
-                displayLocation = state, country_code
+                displayLocation = f'{city}, {state}'
+            elif state:
+                displayLocation = f'{city}'
         elif county:
-            
-        count = count + 1
+            if state_code:
+                displayLocation = f'{county}, {state_code}'
+            elif country:
+                displayLocation = f'{county}, {state}'
+            else:
+                displayLocation = f'{county}'
+        elif country:
+            displayLocation = f'{country}'
+        elif country_code:
+            displayLocation = f'{country_code}'
+        else :
+            displayLocation = f'{state}'
+
+        count = count + 1        
 
     root.after(5000, refresh)
 
