@@ -36,8 +36,7 @@ def update_data():
                     continue
                 #get the 'tail number' and strip any spaces
                 tempData["flight"] = (x.get("flight")).strip()
-                tempData["lat"] = (x.get("lat"))
-                tempData["lon"] = (x.get("lon"))
+                tempData["altitude"] = x.get("alt_baro")
                 tempData["dst"] = (x.get("dst"))
                 tempData["desc"] = (x.get("desc") or x.get("t") or "Unknown Aircraft")
 
@@ -84,8 +83,7 @@ def refresh():
     count = 0
     for j in cleanedPlaneData:
         frames[count]["flight"].config(text=j["flight"])
-        frames[count]["lat"].config(text=j["lat"])
-        frames[count]["lon"].config(text=j["lon"])
+        frames[count]["altitude"].config(text=f'Altitude: {j["altitude"]} ft')
         frames[count]["dst"].config(text=j["dst"])
         frames[count]["desc"].config(text=j["desc"])
 
@@ -180,10 +178,8 @@ for i in range(0, 3):
     card = tk.Frame(mainFrame)
     flightLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
     flightLabel.pack()
-    latLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
-    latLabel.pack()
-    longLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
-    longLabel.pack()
+    altitudeLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
+    altitudeLabel.pack()
     distLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
     distLabel.pack()
     locationLabel = tk.Label(card, text="", font=('Arial', 18), bg = '#000000', fg='#ffffff')
@@ -193,8 +189,7 @@ for i in range(0, 3):
     card.configure(background='black')
     card.pack(pady=50)
     tempData["flight"] = flightLabel
-    tempData["lat"] = latLabel
-    tempData["lon"] = longLabel
+    tempData["altitude"] = altitudeLabel
     tempData["dst"] = distLabel
     tempData["location"] = locationLabel
     tempData["desc"] = typeLabel
