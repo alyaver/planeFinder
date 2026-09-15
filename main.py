@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 
 #https://api.airplanes.live/v2/point/lat/lon/radius
-airplanesUrl = "https://api.airplanes.live/v2/point/38.727929544614305/-121.145174979809/50"
+airplanesUrl = "https://opendata.adsb.fi/api/v3/lat/38.727929544614305/lon/-121.145174979809/dist/50"
 geoUrl = "https://api.geoapify.com/v1/geocode/reverse"
 
 cleanedPlaneData = []
@@ -17,7 +17,7 @@ geoKey = os.getenv("GEOAPIFY_API_KEY")
 
 def update_data():
     try:
-        response = requests.get(airplanesUrl)
+        response = requests.get(airplanesUrl, timeout=10)
 
         if response.status_code == 200:
 
@@ -75,6 +75,11 @@ def update_time():
 
 def refresh():
     cleanedPlaneData.clear()
+
+    for frame in frames:
+        for label in frame.values():
+            label.config(text="")
+
     update_data()
     count = 0
     for j in cleanedPlaneData:
@@ -90,31 +95,17 @@ def refresh():
         county = location.get("county")
         state = location.get("state")
         state_code = location.get("state_code")
-        country = location.get("country")
-        country_code = location.get("country_code")
-
-        displayLocation = "Unknown Location"
 
         if city:
-            if state_code:
-                displayLocation = f'{city}, {state_code}'
-            elif state:
-                displayLocation = f'{city}, {state}'
-            elif state:
-                displayLocation = f'{city}'
+            displayLocation = f"{city}, {state_code}" if state_code else city
         elif county:
-            if state_code:
-                displayLocation = f'{county}, {state_code}'
-            elif country:
-                displayLocation = f'{county}, {state}'
-            else:
-                displayLocation = f'{county}'
-        elif country:
-            displayLocation = f'{country}'
-        elif country_code:
-            displayLocation = f'{country_code}'
-        else :
-            displayLocation = f'{state}'
+            displayLocation = f"{county}, {state_code}" if state_code else county
+        elif state:
+            displayLocation = state
+        else:
+            displayLocation = "Unknown Location"
+    
+        frames[count]["location"].config(text=displayLocation)
 
         count = count + 1        
 
@@ -137,7 +128,7 @@ def coordToCity(lat, lon):
 }
 
     try: 
-        response = requests.get(geoUrl, params=paramsDic)
+        response = requests.get(geoUrl, params=paramsDic, timeout=10)
 
         if response.status_code == 200:
 
