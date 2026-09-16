@@ -32,11 +32,12 @@ def update_data():
                 if not check:
                     continue
                 #make sure that only planes in air are showing up
-                if x.get("alt_baro") == "ground" or int(x.get("alt_baro")) < 200:
+                altitude = x.get("alt_baro")
+                if altitude == "ground" or not isinstance(altitude, (int, float)) or altitude < 200:
                     continue
                 #get the 'tail number' and strip any spaces
                 tempData["flight"] = (x.get("flight")).strip()
-                tempData["altitude"] = x.get("alt_baro")
+                tempData["altitude"] = altitude
                 tempData["dst"] = (x.get("dst"))
                 tempData["desc"] = (x.get("desc") or x.get("t") or "Unknown Aircraft")
 
@@ -164,7 +165,7 @@ w, h = root.winfo_screenwidth(), root.winfo_screenheight()
 root.configure(background='black')
 
 root.geometry("%dx%d+0+0" % (w, h))
-root.title("Planes")
+root.title("Plane Finder")
 
 header = tk.Frame(root)
 header.configure(background='black')
